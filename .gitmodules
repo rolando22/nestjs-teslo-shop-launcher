@@ -1,0 +1,3 @@
+[submodule "client-gateway"]
+	path = client-gateway
+	url = https://github.com/rolando22/nestjs-teslo-shop-client-gateway.git
