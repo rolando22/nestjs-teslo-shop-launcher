@@ -1,0 +1,59 @@
+services:
+  nats-server:
+    image: nats:latest
+    ports:
+      - 8222:8222
+
+  client-gateway:
+    build: ./client-gateway
+    ports:
+      - ${CLIENT_GATEWAY_PORT}:3000
+    volumes:
+      - ./client-gateway/src:/usr/src/app/src
+    command: npm run start:dev
+    environment:
+      - PORT=3000
+      - NATS_SERVERS=nats://nats-server:4222
+
+  products-ms:
+    build: ./products-ms
+    volumes:
+      - ./products-ms/src:/usr/src/app/src
+    command: sh -c "npm run docker:start && npm run start:dev"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=${PRODUCTS_MS_DATABASE_URL}
+      - NATS_SERVERS=nats://nats-server:4222
+
+  orders-ms:
+    build: ./orders-ms
+    volumes:
+      - ./orders-ms/src:/usr/src/app/src
+    command: sh -c "npm run docker:start && npm run start:dev"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=${ORDERS_MS_DATABASE_URL}
+      - NATS_SERVERS=nats://nats-server:4222
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16.2
+    ports:
+      - ${ORDERS_MS_POSTGRES_PORT}:5432
+    environment:
+      - POSTGRES_USER=${ORDERS_MS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${ORDERS_MS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${ORDERS_MS_POSTGRES_DB}
+    volumes:
+      - ./products-ms/postgres-data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "${ORDERS_MS_PGADMIN_DEFAULT_PORT}:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${ORDERS_MS_PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${ORDERS_MS_PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - postgres
