@@ -8,7 +8,11 @@
 
 1. Clonar el repositorio.
 2. Crear archivo `.env` basado en el archivo `.env.template`.
-3. Ejecutar app.
+3. Reconstruir los sub-módulos.
+```
+git submodule update --init --recursive
+```
+4. Ejecutar app.
 ```
 docker compose up --build
 ```
